@@ -1,0 +1,19 @@
+frontend www-http
+        bind *:80
+        mode http
+        default_backend web-backend
+
+frontend www-https
+        bind *:433 crt /etc/letsencrypt/live/www.nickitta.tech/fullchain.pem
+        http-request set-header X-Forwarded-Proto https
+        acl letsencrypt-acl path_beg /.well-known/acme-challenge/
+        use_backend letsencrypt-backend if letsencrypt-acl
+        default_backend web-backend
+
+backend web-backend
+        redirect scheme https unless { ssl_fc }
+        balance roundrobin
+        server 6023-web-01 34.207.78.142:80 check
+        server 6023-web-02 52.203.234.5:80 check
+backend letsencrypt-backend
+        server letsencrypt 127.0.0.1:54321
